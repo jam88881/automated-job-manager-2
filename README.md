@@ -27,4 +27,9 @@ an python automated job manager that uses Advance Python Scheduler and builds as
 
    pip3 install -r requirements.txt   (mac / linux)
 
-
+### Build the executable ###
+a simple command (only tested on windows)
+```
+    pyinstaller -w -F main.py --console
+``` 
+creates a folder called dist. look insde to find the .exe

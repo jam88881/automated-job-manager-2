@@ -1,0 +1,1 @@
+update factor set value = '0.19' where id = 1

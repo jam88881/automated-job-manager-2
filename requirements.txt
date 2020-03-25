@@ -1,1 +1,4 @@
 apscheduler==2.1.2
+pysqlite3 
+pyinstaller
+watchdog

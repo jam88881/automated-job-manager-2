@@ -1,0 +1,1 @@
+INSERT INTO "main"."FACTOR" ("Name", "Value") VALUES ("Geriatric", "0.42");
