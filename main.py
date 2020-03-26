@@ -12,43 +12,53 @@ s = Scheduler()
 def run_sql(database, sql):
     try:
         conn = sqlite3.connect(database)
-        #sql = 'CREATE TABLE ' + self.factor_name + ' AS ' + self.factor_data
         cursor = conn.execute(sql)
         results = cursor.fetchall()
         conn.commit()
         conn.close()
-        logging.info('%s, commited', results)
+        logging.info('%s, commited', sql)
     except Exception as ex:
         print(str(ex))
         logging.error('Error retreiveing data for Factor %s:  %s',  self.factor_name, str(ex))
 
 def on_created(event):
     print(f"{event.src_path} has been created")
-    if ("start" in event.src_path):
-        s.start()
-    else:
         if (".sql" in event.src_path):
-            #get files in /queue/1, /queue/2, ..,/queue/n-1, /queue/n
-            for subdir, dirs, files in os.walk('.'):
-                for file in files:
-                    print(os.path.join(subdir, file))
-                    f = open(os.path.join(subdir, file), 'r')
-                    contents = f.read()
-                    print(contents)
-                    s.add_cron_job(run_sql, args=['factors.db', contents])
+            with open(event.src_path, 'r') as file:
+                contents = f.read()
+                print(contents)
+                run_sql('factors.db', contents)
 
 def on_deleted(event):
     print(f"deleted {event.src_path}")
 
 def on_modified(event):
-    print(f"{event.src_path} has been modified")
+    print(f"modified {event.src_path}")
 
 def on_moved(event):
     print(f"{event.src_path} moved to {event.dest_path}")
 
+def process_queue():
+    for subdir, dirs, files in os.walk('queue'):
+        for file in files:
+            print(os.path.join(subdir, file))
+            with open(os.path.join(subdir, file), 'r') as file:
+                contents = f.read()
+                print(contents)
+                run_sql('factors.db',contents)
+
 if __name__ == "__main__":
+    #TODO set up a config
+    #check queue directory on start
+    logging.basicConfig(filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s', level='INFO')
+    logging.info('Initaling AP scheduler to process...')
+
+    s.add_cron_job(process_queue, day_of_week='mon-fri', hour=9, minute=47)
+    s.start()
+
     #set up watchdog file system watcher in the root directory
-    patterns = "*.sql"
+    
+    patterns = ["*.sql"] 
     ignore_patterns = ""
     ignore_directories = False
     case_sensitive = True
@@ -57,14 +67,17 @@ if __name__ == "__main__":
     event_handler.on_deleted = on_deleted
     event_handler.on_modified = on_modified
     event_handler.on_moved = on_moved
-    path = "."
+    path = ".\immediate"
     go_recursively = True
-    my_observer = Observer()
-    my_observer.schedule(event_handler, path, recursive=go_recursively)
-    my_observer.start()
+    observer = Observer()
+    observer.schedule(event_handler, path, recursive=go_recursively)
+    observer.start()
+    
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        my_observer.stop()
-        my_observer.join()
+        observer.stop()
+        observer.join()
+        s.shutdown()
+    
