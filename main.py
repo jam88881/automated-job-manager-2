@@ -30,6 +30,7 @@ def on_created(event):
                 contents = f.read()
                 print(contents)
                 run_sql('factors.db', contents)
+                #s.add_cron_job(run_sql, args=['factors.db', contents])
     except Exception as ex:
         logging.error(str(ex))
 
@@ -44,6 +45,10 @@ def on_moved(event):
 
 def process_queue():
     print('walking through process queue')
+
+    #Rewrite this such that each file to process is it's own cron job 
+    #instead of the queue scanning and processing being one cron job
+
     for subdir, dirs, files in os.walk('queue'):
         for file in files:
             print(os.path.join(subdir, file))
@@ -62,7 +67,7 @@ if __name__ == "__main__":
         logging.info('Initaling AP scheduler to process...')
         
         #check queue directory on a set schedule
-        s.add_cron_job(process_queue, day_of_week='mon-fri', hour=13, minute=12)
+        s.add_cron_job(process_queue, minute='0-59')
         s.start()
 
         #set up watchdog file system watcher in the root directory
@@ -75,7 +80,7 @@ if __name__ == "__main__":
         event_handler.on_deleted = on_deleted
         event_handler.on_modified = on_modified
         event_handler.on_moved = on_moved
-        path = ".\immediate"
+        path = ".\queue"
         observer = Observer()
         observer.schedule(event_handler, path, recursive=True)
         print("starting observer")
