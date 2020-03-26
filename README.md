@@ -33,3 +33,7 @@ a simple command (only tested on windows)
     pyinstaller -w -F main.py --console
 ``` 
 creates a folder called dist. look insde to find the .exe
+
+### Usage ###
+1. /IMMEDIATE/: When running this program will process applicable files in this folder immediately
+2. /QUEUE/: When running this program will process files in this folder on a regular schedule
